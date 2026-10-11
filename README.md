@@ -1,6 +1,6 @@
 # Returnable Packaging Export Draft Checker
 
-Python notebook for reviewing draft export customs declarations for returnable packaging against invoice data and product master records. The operational scope covers **สิทธิอนุมัติหลักการ** (approval-in-principle workflow) and **สุทธินำกลับ** (re-importation certificate workflow). These English labels describe the workflows; they are not verified official translations.
+Python scripts adapted from a notebook for reviewing draft export customs declarations for returnable packaging against invoice data and product master records. The operational scope covers **สิทธิอนุมัติหลักการ** (approval-in-principle workflow) and **สุทธินำกลับ** (re-importation certificate workflow). These English labels describe the workflows; they are not verified official translations.
 
 This project supports an operator's document review before submission. It does not submit declarations or connect to SAP or a customs system.
 
@@ -39,14 +39,14 @@ Normalization removes spaces, ignores letter case and converts numeric-looking v
 
 ## Run locally
 
-The source notebook and embedded product master are private and are not published in this repository. The instructions below describe the owner's local workflow.
+The original notebook and real product master remain private. Public Python scripts use example paths; the master comparison script contains fictional records only. Replace these placeholders locally with your own authorized reference data. The placeholder tariff codes and country `XX` are not valid customs references.
 
 1. Install Python and dependencies: `pip install -r requirements.txt`.
-2. Start Jupyter: `jupyter notebook`.
-3. Open the private source notebook.
-4. Edit `file_path_inv`, `file_path_draft` and/or `folder` in the chosen comparison cell. Example paths point to `data/`.
+2. Start Jupyter: `jupyter notebook`, or start IPython with `ipython`.
+3. Choose `check_rtp_draft.py` or `check_returnable_master_draft.py`. In IPython/Jupyter, run `%run check_rtp_draft.py` or `%run check_returnable_master_draft.py`.
+4. Edit `file_path_inv`, `file_path_draft` and/or `folder` in the chosen script. Example paths point to `data/`.
 5. Confirm source headers, column positions and master values against your actual templates.
-6. Run only the selected comparison section. The original final RTP cell duplicated the earlier RTP cell and was removed from this publication copy.
+6. Run only the selected script. These scripts preserve the original comparison logic and its limitations.
 
 The RTP reader expects metadata on row 9 and headers on row 13. Despite its `.xls` suffix, its invoice input is delimited text, not a binary Excel workbook. The tire/adapter reader expects invoice number in row 4, column AI, item data from row 32, and model descriptions on the next row.
 
@@ -98,13 +98,15 @@ Only mismatching fields are displayed; matching fields are omitted. The operator
 - Missing columns can become empty values and appear equal. Numeric normalization can discard leading zeros and precision.
 - Tire/adapter missing-master and missing-invoice statuses are recorded in `df_result` but excluded from the displayed mismatch table. Empty values receive an information status. Consequently, an all-fields-match message is not proof that every item was validated; inspect `df_result` too.
 - This notebook checks selected data fields. It does not verify legal eligibility, approval validity, certificate requirements or the complete correctness of either customs treatment.
-- The source notebook and embedded product master remain private. This repository documents the workflow and uses fictional output examples.
+- Real product master values, personal paths and original execution outputs are excluded. Public scripts contain fictional master records and preserve the original comparison logic.
 
 ## Repository contents
 
 | File | Purpose |
 | --- | --- |
+| `check_rtp_draft.py` | Row-by-row invoice comparison with example paths |
+| `check_returnable_master_draft.py` | Product-code lookup comparison with fictional master records |
 | `requirements.txt` | Notebook and comparison dependencies |
 | `.gitignore` | Excludes local shipment data and notebook checkpoints |
 
-Real invoice and declaration files are not included. Runtime comparison against actual workbooks has not been performed; publication checks cover notebook structure and Python syntax.
+Real invoice and declaration files are not included. Runtime comparison against actual workbooks has not been performed; publication checks cover Python syntax and removal of real master values and personal paths.
