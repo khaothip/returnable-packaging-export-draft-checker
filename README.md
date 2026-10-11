@@ -45,7 +45,7 @@ The original notebook and real product master remain private. Public Python scri
 2. Start Jupyter: `jupyter notebook`, or start IPython with `ipython`.
 3. Choose `check_approval_in_principle_draft.py` or `check_reimportation_certificate_draft.py`. In IPython/Jupyter, run `%run check_approval_in_principle_draft.py` or `%run check_reimportation_certificate_draft.py`.
 4. Edit `file_path_inv`, `file_path_draft` and/or `folder` in the chosen script. Example paths point to `data/`.
-5. Confirm source headers, column positions and master values against your actual templates.
+5. Use the standard system-exported invoice and draft files, and configure the local master values for your products.
 6. Run only the selected script. These scripts preserve the original comparison logic and its limitations.
 
 The RTP reader expects metadata on row 9 and headers on row 13. Despite its `.xls` suffix, its invoice input is delimited text, not a binary Excel workbook. The tire/adapter reader expects invoice number in row 4, column AI, item data from row 32, and model descriptions on the next row.
@@ -88,14 +88,16 @@ No mismatch table is displayed. For example, a draft unit of `C62` and an invoic
 
 Only mismatching fields are displayed; matching fields are omitted. The operator reviews the highlighted differences against the source documents before making corrections.
 
-**Interpretation:** An all-fields-match message covers the comparisons performed by the current logic. Missing fields, unmatched product codes and extra rows still require the separate checks described below.
+**Interpretation:** An all-fields-match message covers the comparisons performed by the current logic. Unmatched product codes and differences in item counts still require the separate checks described below.
 
-## Limitations of the original logic
+## Limitations
 
-- Fixed templates, headers, column positions and embedded master records require maintenance.
+All invoice and draft files used in the operational workflow are exported from the source systems with standardized headers and column layouts. Header mismatches or unexpected extra columns are therefore not limitations of the current workflow.
+
+- The product master must be kept up to date with the products being checked.
 - RTP uses row order, compares only the shorter row count and selects the most recently modified `.xlsx` in the configured folder. Extra rows are warned about but not compared; unrelated workbooks can be selected.
 - Tire/adapter matching assumes unique product codes. Repeated codes require additional handling. Invoice/master records absent from the draft are not checked.
-- Missing columns can become empty values and appear equal. Numeric normalization can discard leading zeros and precision.
+- Numeric normalization can discard leading zeros and precision.
 - Tire/adapter missing-master and missing-invoice statuses are recorded in `df_result` but excluded from the displayed mismatch table. Empty values receive an information status. Consequently, an all-fields-match message is not proof that every item was validated; inspect `df_result` too.
 - This notebook checks selected data fields. It does not verify legal eligibility, approval validity, certificate requirements or the complete correctness of either customs treatment.
 - Real product master values, personal paths and original execution outputs are excluded. Public scripts contain fictional master records and preserve the original comparison logic.
