@@ -10,12 +10,12 @@ Based on the operator's reported average of **20 invoices per month**, this tool
 
 ## Implemented checks
 
-The source notebook contains two comparison methods. It does not explicitly label which customs workflow each method belongs to; select the method according to the source document layout and confirm the relevant customs treatment separately.
+The scripts are separated by customs workflow: **RTP invoice comparison → สิทธิอนุมัติหลักการ (approval-in-principle)** and **returnable tire/adapter master comparison → สุทธินำกลับ (re-importation certificate)**. Select the script for the relevant workflow and source document layout.
 
 | Method | Input | Matching |
 | --- | --- | --- |
-| RTP invoice comparison | UTF-16 delimited invoice export named `Invoice Excel.xls`, plus a draft `.xlsx` | Row by row in the same order |
-| Returnable tire and adapter comparison | Invoice `.xlsx` with an `INVOICE` worksheet, draft `.xlsx`, and embedded product master | Draft product code against invoice model number and master part number |
+| สิทธิอนุมัติหลักการ — RTP invoice comparison | UTF-16 delimited invoice export named `Invoice Excel.xls`, plus a draft `.xlsx` | Row by row in the same order |
+| สุทธินำกลับ — returnable tire and adapter comparison | Invoice `.xlsx` with an `INVOICE` worksheet, draft `.xlsx`, and embedded product master | Draft product code against invoice model number and master part number |
 
 The RTP method checks invoice number, product code, brand, descriptions, tariff code, privilege, quantity, unit, weight, unit price, currency, vessel, origin, and approval reference. Its current weight mapping compares draft net weight to the invoice field `Total G.W.(Kgs)`; confirm this mapping for your actual template.
 
@@ -43,7 +43,7 @@ The original notebook and real product master remain private. Public Python scri
 
 1. Install Python and dependencies: `pip install -r requirements.txt`.
 2. Start Jupyter: `jupyter notebook`, or start IPython with `ipython`.
-3. Choose `check_rtp_draft.py` or `check_returnable_master_draft.py`. In IPython/Jupyter, run `%run check_rtp_draft.py` or `%run check_returnable_master_draft.py`.
+3. Choose `check_approval_in_principle_draft.py` or `check_reimportation_certificate_draft.py`. In IPython/Jupyter, run `%run check_approval_in_principle_draft.py` or `%run check_reimportation_certificate_draft.py`.
 4. Edit `file_path_inv`, `file_path_draft` and/or `folder` in the chosen script. Example paths point to `data/`.
 5. Confirm source headers, column positions and master values against your actual templates.
 6. Run only the selected script. These scripts preserve the original comparison logic and its limitations.
@@ -104,8 +104,8 @@ Only mismatching fields are displayed; matching fields are omitted. The operator
 
 | File | Purpose |
 | --- | --- |
-| `check_rtp_draft.py` | Row-by-row invoice comparison with example paths |
-| `check_returnable_master_draft.py` | Product-code lookup comparison with fictional master records |
+| `check_approval_in_principle_draft.py` | Row-by-row invoice comparison with example paths |
+| `check_reimportation_certificate_draft.py` | Product-code lookup comparison with fictional master records |
 | `requirements.txt` | Notebook and comparison dependencies |
 | `.gitignore` | Excludes local shipment data and notebook checkpoints |
 
