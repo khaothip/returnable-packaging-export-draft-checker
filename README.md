@@ -39,6 +39,8 @@ Normalization removes spaces, ignores letter case and converts numeric-looking v
 
 ## Run locally
 
+The notebook upload is pending authorization to publish its embedded product master and operational logic. The instructions below apply once `export_draft_checker.ipynb` is available.
+
 1. Install Python and dependencies: `pip install -r requirements.txt`.
 2. Start Jupyter: `jupyter notebook`.
 3. Open `export_draft_checker.ipynb`.
