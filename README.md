@@ -10,24 +10,24 @@ Based on the operator's reported average of **20 invoices per month**, this tool
 
 ## Implemented checks
 
-The scripts are separated by customs workflow: **RTP invoice comparison → สิทธิอนุมัติหลักการ (approval-in-principle)** and **returnable tire/adapter master comparison → สุทธินำกลับ (re-importation certificate)**. Select the script for the relevant workflow and source document layout.
+The scripts are separated by customs workflow: **สิทธิอนุมัติหลักการ (approval-in-principle)** and **สุทธินำกลับ (re-importation certificate)**. The checked fields are those required to match the Customs Department documents in the owner's operational workflow.
 
 | Method | Input | Matching |
 | --- | --- | --- |
-| สิทธิอนุมัติหลักการ — RTP invoice comparison | UTF-16 delimited invoice export named `Invoice Excel.xls`, plus a draft `.xlsx` | Row by row in the same order |
-| สุทธินำกลับ — returnable tire and adapter comparison | Invoice `.xlsx` with an `INVOICE` worksheet, draft `.xlsx`, and embedded product master | Draft product code against invoice model number and master part number |
+| สิทธิอนุมัติหลักการ (approval-in-principle) | UTF-16 delimited invoice export named `Invoice Excel.xls`, plus a draft `.xlsx` | Row by row in the same order |
+| สุทธินำกลับ (re-importation certificate) | Invoice `.xlsx` with an `INVOICE` worksheet, draft `.xlsx`, and embedded product master | Draft product code against invoice model number and master part number |
 
-The RTP method checks invoice number, product code, brand, descriptions, tariff code, privilege, quantity, unit, weight, unit price, currency, vessel, origin, and approval reference. Its current weight mapping compares draft net weight to the invoice field `Total G.W.(Kgs)`; confirm this mapping for your actual template.
+The approval-in-principle method checks invoice number, product code, brand, descriptions, tariff code, privilege, quantity, unit, weight, unit price, currency, vessel, origin, and approval reference. Its current weight mapping compares draft net weight to the invoice field `Total G.W.(Kgs)`; confirm this mapping for your actual template.
 
-The tire/adapter method checks invoice number, product code, brand, descriptions, tariff code, quantity, unit price, unit, currency and country, and calculates expected net weight as **master unit net weight × invoice quantity**, rounded to one decimal. Its current country mapping compares draft destination country to master `Origin Country`; confirm that this is appropriate for your shipment. It does not explicitly validate a re-importation certificate number.
+The re-importation certificate method checks invoice number, product code, brand, descriptions, tariff code, quantity, unit price, unit, currency and country, and calculates expected net weight as **master unit net weight × invoice quantity**, rounded to one decimal. Its current country mapping compares draft destination country to master `Origin Country`; confirm that this is appropriate for your shipment. It does not explicitly validate a re-importation certificate number.
 
 ## Python logic
 
 ```mermaid
 flowchart TD
-    A[Choose comparison method] --> B{Input layout}
-    B -->|RTP export| C[Read invoice and latest draft]
-    B -->|Tire and adapter| D[Read invoice, draft and master]
+    A[Choose customs workflow] --> B{Workflow}
+    B -->|Approval-in-principle| C[Read invoice and latest draft]
+    B -->|Re-importation certificate| D[Read invoice, draft and master]
     C --> E[Align rows and map fields]
     D --> F[Look up product codes and calculate weight]
     E --> G[Normalize and compare values]
@@ -35,7 +35,7 @@ flowchart TD
     G --> H[Display mismatches for review]
 ```
 
-Normalization removes spaces, ignores letter case and converts numeric-looking values to float strings. `PC` and `C62` are treated as equivalent units. The RTP method also rounds predominantly numeric invoice columns to one decimal.
+Normalization removes spaces, ignores letter case and converts numeric-looking values to float strings. `PC` and `C62` are treated as equivalent units. The approval-in-principle method also rounds predominantly numeric invoice columns to one decimal.
 
 ## Run locally
 
@@ -48,11 +48,11 @@ The original notebook and real product master remain private. Public Python scri
 5. Use the standard system-exported invoice and draft files, and configure the local master values for your products.
 6. Run only the selected script. These scripts preserve the original comparison logic and its limitations.
 
-The RTP reader expects metadata on row 9 and headers on row 13. Despite its `.xls` suffix, its invoice input is delimited text, not a binary Excel workbook. The tire/adapter reader expects invoice number in row 4, column AI, item data from row 32, and model descriptions on the next row.
+The approval-in-principle reader expects metadata on row 9 and headers on row 13. Despite its `.xls` suffix, its invoice input is delimited text, not a binary Excel workbook. The re-importation certificate reader expects invoice number in row 4, column AI, item data from row 32, and model descriptions on the next row.
 
 ## Output
 
-Notebook output includes mismatch tables, success messages and, for the RTP method, row-count warnings and elapsed time. No real shipment output is included. A mismatch table contains the row or part number, field, draft value, reference value and status.
+Notebook output includes mismatch tables, success messages and, for the approval-in-principle method, row-count warnings and elapsed time. No real shipment output is included. A mismatch table contains the row or part number, field, draft value, reference value and status.
 
 ## Example output
 
@@ -88,19 +88,22 @@ No mismatch table is displayed. For example, a draft unit of `C62` and an invoic
 
 Only mismatching fields are displayed; matching fields are omitted. The operator reviews the highlighted differences against the source documents before making corrections.
 
-**Interpretation:** An all-fields-match message covers the comparisons performed by the current logic. Unmatched product codes and differences in item counts still require the separate checks described below.
+**Interpretation:** The result covers items within the intended checking scope. Items not found in the reference master or invoice are outside that scope and are not treated as mismatches.
+
+## Checking scope
+
+- Invoice and draft files are standard system exports with consistent headers and column layouts.
+- The fields checked are required to match the Customs Department documents used in this workflow.
+- For **สุทธินำกลับ (re-importation certificate)**, each model has one unique product code; matching uses that code.
+- Items not found in the reference master or invoice are outside the intended checking scope.
+- Real master records, shipment data and original outputs remain private. Public scripts and output examples use fictional data only.
 
 ## Limitations
 
-All invoice and draft files used in the operational workflow are exported from the source systems with standardized headers and column layouts. Header mismatches or unexpected extra columns are therefore not limitations of the current workflow.
-
 - The product master must be kept up to date with the products being checked.
-- RTP uses row order, compares only the shorter row count and selects the most recently modified `.xlsx` in the configured folder. Extra rows are warned about but not compared; unrelated workbooks can be selected.
-- Tire/adapter matching assumes unique product codes. Repeated codes require additional handling. Invoice/master records absent from the draft are not checked.
-- Numeric normalization can discard leading zeros and precision.
-- Tire/adapter missing-master and missing-invoice statuses are recorded in `df_result` but excluded from the displayed mismatch table. Empty values receive an information status. Consequently, an all-fields-match message is not proof that every item was validated; inspect `df_result` too.
-- This notebook checks selected data fields. It does not verify legal eligibility, approval validity, certificate requirements or the complete correctness of either customs treatment.
-- Real product master values, personal paths and original execution outputs are excluded. Public scripts contain fictional master records and preserve the original comparison logic.
+- **สิทธิอนุมัติหลักการ (approval-in-principle)** compares items in row order, so the invoice and draft must use the same item sequence. If item counts differ, the script warns about the difference but does not compare extra rows.
+- **สิทธิอนุมัติหลักการ (approval-in-principle)** selects the most recently modified `.xlsx` in the configured folder. Keep the intended draft as the latest file in that folder.
+- Numeric normalization can remove leading zeros or affect numeric precision.
 
 ## Repository contents
 
