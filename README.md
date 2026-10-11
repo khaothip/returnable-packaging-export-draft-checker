@@ -39,11 +39,11 @@ Normalization removes spaces, ignores letter case and converts numeric-looking v
 
 ## Run locally
 
-The notebook upload is pending authorization to publish its embedded product master and operational logic. The instructions below apply once `export_draft_checker.ipynb` is available.
+The source notebook and embedded product master are private and are not published in this repository. The instructions below describe the owner's local workflow.
 
 1. Install Python and dependencies: `pip install -r requirements.txt`.
 2. Start Jupyter: `jupyter notebook`.
-3. Open `export_draft_checker.ipynb`.
+3. Open the private source notebook.
 4. Edit `file_path_inv`, `file_path_draft` and/or `folder` in the chosen comparison cell. Example paths point to `data/`.
 5. Confirm source headers, column positions and master values against your actual templates.
 6. Run only the selected comparison section. The original final RTP cell duplicated the earlier RTP cell and was removed from this publication copy.
@@ -54,6 +54,42 @@ The RTP reader expects metadata on row 9 and headers on row 13. Despite its `.xl
 
 Notebook output includes mismatch tables, success messages and, for the RTP method, row-count warnings and elapsed time. No real shipment output is included. A mismatch table contains the row or part number, field, draft value, reference value and status.
 
+## Example output
+
+The examples below use **entirely fictional data**. They illustrate the notebook's output format and are not screenshots or results from real shipments. The elapsed times are illustrative.
+
+### Example 1: All compared fields match
+
+Assume both documents contain the same number of rows, every required field is present, and all compared values match after normalization.
+
+```text
+✅ ข้อมูลทุก field ตรงกันหมด!
+
+⏱️ ใช้เวลา run ทั้งหมด: 0m 0.85s
+```
+
+No mismatch table is displayed. For example, a draft unit of `C62` and an invoice unit of `PC` are treated as a match.
+
+### Example 2: Some fields do not match
+
+```text
+⚠️ พบข้อมูลไม่ตรงกัน 3 รายการ
+```
+
+| Row | Field | df_draft | df_inv | Status |
+| --- | --- | --- | --- | --- |
+| 1 | ปริมาณ (Invoice) | 18 | 20 | ⚠️ ไม่ตรง |
+| 1 | Unit price (เงินต่างประเทศ) | 110 | 100 | ⚠️ ไม่ตรง |
+| 2 | เลขที่อินวอยซ์ | DEMO-INV-002 | DEMO-INV-001 | ⚠️ ไม่ตรง |
+
+```text
+⏱️ ใช้เวลา run ทั้งหมด: 0m 0.92s
+```
+
+Only mismatching fields are displayed; matching fields are omitted. The operator reviews the highlighted differences against the source documents before making corrections.
+
+**Interpretation:** An all-fields-match message covers the comparisons performed by the current logic. Missing fields, unmatched product codes and extra rows still require the separate checks described below.
+
 ## Limitations of the original logic
 
 - Fixed templates, headers, column positions and embedded master records require maintenance.
@@ -62,13 +98,12 @@ Notebook output includes mismatch tables, success messages and, for the RTP meth
 - Missing columns can become empty values and appear equal. Numeric normalization can discard leading zeros and precision.
 - Tire/adapter missing-master and missing-invoice statuses are recorded in `df_result` but excluded from the displayed mismatch table. Empty values receive an information status. Consequently, an all-fields-match message is not proof that every item was validated; inspect `df_result` too.
 - This notebook checks selected data fields. It does not verify legal eligibility, approval validity, certificate requirements or the complete correctness of either customs treatment.
-- Publication preparation cleared notebook outputs, replaced personal file paths with examples and removed the duplicated RTP cell. Comparison logic and embedded product master values are otherwise retained.
+- The source notebook and embedded product master remain private. This repository documents the workflow and uses fictional output examples.
 
 ## Repository contents
 
 | File | Purpose |
 | --- | --- |
-| `export_draft_checker.ipynb` | Sanitized publication copy of the supplied notebook |
 | `requirements.txt` | Notebook and comparison dependencies |
 | `.gitignore` | Excludes local shipment data and notebook checkpoints |
 
